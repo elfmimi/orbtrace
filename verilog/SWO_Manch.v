@@ -31,7 +31,7 @@ module swoManchIF (
    reg [15:0] halfbitlen;               // Clock ticks for a half bit length
    reg [15:0] activeCount;              // Clock ticks through this bit
    reg [2:0]  bitcount;                 // Index through this byte
-   reg [1:0]  bitshistory;              // Previous state of the SWO bits
+   reg bithistory;                      // Previous state of the SWO bit
    
    reg [1:0]  decodeState;              // Current state of decoder
 
@@ -46,10 +46,10 @@ module swoManchIF (
    wire [15:0] bitlen           = {halfbitlen[14:0],1'b0};
 
    // Bit construction slider
-   wire [3:0] bitsnow = { bitshistory, SWOinb, SWOina };
+   wire [2:0] bitsnow = { bithistory, SWOinb, SWOina };
 
    // ...and edge detection
-   wire       isEdge  = bitsnow[3:2]!=bitsnow[1:0];
+   wire       isEdge  = bitsnow[2]!=(bitsnow[1]) || (bitsnow[2]!=bitsnow[0]);
    
    always @(posedge clk, posedge rst)
      begin
@@ -60,7 +60,7 @@ module swoManchIF (
 	  end
 	else
 	  begin
-	     bitshistory <= { SWOinb, SWOina };
+	     bithistory <= SWOina;
 
 	     // Guard to reset if we spend too long waiting for an edge
 	     if (activeCount > bitlen)
@@ -142,7 +142,8 @@ module swoManchIF (
 			// This is definately a change in the middle of a bit..so here we need to record the value
 			construct[bitcount] <= bitsnow[2];
 			bitcount <= bitcount + 1;
-
+			activeCount <= bitsnow[1]!=bitsnow[0]?1:0;
+			
 			// The next bit we're looking for is the first half
 			decodeState <= DECODE_STATE_RXS_GETTING_BITS0;
 			
