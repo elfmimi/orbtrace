@@ -33,7 +33,7 @@ _io = [
         Subsignal('jtck_dir', Pins('B14')),
         Subsignal('jtms',     Pins('A14')),
         Subsignal('jtms_dir', Pins('A15')),
-        Subsignal('jtdo',     Pins('B12')),
+        #Subsignal('jtdo',     Pins('B12')),
         Subsignal('jtdi',     Pins('A12')),
         Subsignal('jtdi_dir', Pins('A13')),
         Subsignal('nrst',     Pins('A11')),
@@ -45,6 +45,12 @@ _io = [
     ('trace', 0,
         Subsignal('clk',  Pins('C8')),
         Subsignal('data', Pins('A10 B9 A9 B8')),
+        IOStandard('LVCMOS33')
+    ),
+
+    # SWO
+    ('swo', 0,
+        Subsignal('swo',     Pins('B12')),
         IOStandard('LVCMOS33')
     ),
 

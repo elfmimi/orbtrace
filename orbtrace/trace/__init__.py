@@ -4,6 +4,8 @@ from migen.genlib.cdc import MultiReg
 from litex.soc.interconnect.stream import Endpoint, AsyncFIFO, Pipeline, CombinatorialActor
 from litex.build.io import DDRInput
 
+from .swo import SWOManchPHY
+
 class TracePHY(Module):
     def __init__(self, pads):
         self.source = source = Endpoint([('data', 128)])
@@ -98,7 +100,8 @@ class Monitor(Module):
         lost = Signal(16)
         clk = Signal(2)
 
-        self.sync.trace += [
+        #self.sync.trace += [
+        self.sync.debug += [
             If(stream.valid,
                 total.eq(total + 1),
             ),
@@ -169,29 +172,39 @@ class Keepalive(Module):
 
 class TraceCore(Module):
     def __init__(self, platform):
-        self.clock_domains.cd_trace = ClockDomain()
+        #self.clock_domains.cd_trace = ClockDomain()
 
-        pads = platform.request('trace')
+        #pads = platform.request('trace')
+        pads = platform.request('swo')
 
-        self.source = source = Endpoint([('data', 128)])
+        #self.source = source = Endpoint([('data', 128)])
+        self.source = source = Endpoint([('data', 8)])
 
         self.width = Signal(2)
 
         # Main pipeline.
-        phy = ClockDomainsRenamer('trace')(TracePHY(pads))
+        #phy = ClockDomainsRenamer('trace')(TracePHY(pads))
+        phy = ClockDomainsRenamer('debug')(SWOManchPHY(pads))
 
-        fifo = ClockDomainsRenamer({'write': 'trace', 'read': 'sys'})(AsyncFIFO([('data', 128)], 512))
+        #fifo = ClockDomainsRenamer({'write': 'trace', 'read': 'sys'})(AsyncFIFO([('data', 128)], 512))
+        fifo = ClockDomainsRenamer({'write': 'debug', 'read': 'sys'})(AsyncFIFO([('data', 8)], 8192))
 
         byteswap = ByteSwap(16)
 
         injector = Injector()
 
-        self.submodules += Pipeline(phy, fifo, byteswap, injector, source)
+        self.submodules += Pipeline(
+            phy,
+            fifo,
+            #byteswap,
+            #injector,
+            source,
+        )
 
         self.submodules += phy, fifo, byteswap, injector
 
         # Config.
-        self.comb += phy.width.eq(self.width)
+        #self.comb += phy.width.eq(self.width)
 
         # Monitoring/keepalive.
         monitor = Monitor(phy.source)
@@ -223,3 +236,4 @@ class TraceCore(Module):
 
         # Add verilog sources.
         platform.add_source('verilog/traceIF.v') # TODO: make sure the path is correct
+        platform.add_source('verilog/SWO_Manch.v')

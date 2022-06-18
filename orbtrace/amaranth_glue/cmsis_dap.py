@@ -81,11 +81,11 @@ class CMSIS_DAP(Module):
             clk = wrapper.from_amaranth(dbgpins.tdi.o_clk),
         )
 
-        self.specials += SDRInput(
-            i = pads.jtdo,
-            o = wrapper.from_amaranth(dbgpins.tdo_swo.i),
-            clk = wrapper.from_amaranth(dbgpins.tdo_swo.i_clk),
-        )
+        #self.specials += SDRInput(
+        #    i = pads.jtdo,
+        #    o = wrapper.from_amaranth(dbgpins.tdo_swo.i),
+        #    clk = wrapper.from_amaranth(dbgpins.tdo_swo.i_clk),
+        #)
 
         if hasattr(pads, 'nrst'):
             nrst = TSTriple()
